@@ -7,6 +7,7 @@ struct SimpleEvent: Codable {
     let location: String?
     let from: String
     let to: String
+    let organizer: String?
 }
 
 @inline(__always)
@@ -15,9 +16,17 @@ func iso8601String(_ date: Date, _ fmt: ISO8601DateFormatter) -> String {
 }
 
 @inline(__always)
-func getTodayRange(_ cal: Calendar) -> (Date, Date) {
-    let start = cal.startOfDay(for: Date())
+func getDayRange(_ cal: Calendar, for date: Date) -> (Date, Date) {
+    let start = cal.startOfDay(for: date)
     return (start, cal.date(byAdding: .day, value: 1, to: start)!)
+}
+
+@inline(__always)
+func parseArgDate(_ arg: String, tz: TimeZone) -> Date? {
+    let df = DateFormatter()
+    df.dateFormat = "yyyy-MM-dd"
+    df.timeZone = tz
+    return df.date(from: arg)
 }
 
 @inline(__always)
@@ -26,7 +35,8 @@ func mapEvent(_ e: EKEvent, _ fmt: ISO8601DateFormatter) -> SimpleEvent {
         title: e.title ?? "(No Title)",
         location: e.location,
         from: iso8601String(e.startDate, fmt),
-        to: iso8601String(e.endDate, fmt)
+        to: iso8601String(e.endDate, fmt),
+        organizer: e.organizer?.name
     )
 }
 
@@ -46,7 +56,15 @@ let tz = TimeZone.current
 var cal = Calendar.current
 cal.timeZone = tz
 
-let (start, end) = getTodayRange(cal)
+let args = CommandLine.arguments
+let targetDate: Date
+if args.count > 1, let parsed = parseArgDate(args[1], tz: tz) {
+    targetDate = parsed
+} else {
+    targetDate = Date()
+}
+let (start, end) = getDayRange(cal, for: targetDate)
+
 let fmt = ISO8601DateFormatter()
 fmt.formatOptions = [.withInternetDateTime]
 fmt.timeZone = tz

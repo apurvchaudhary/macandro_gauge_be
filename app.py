@@ -3,8 +3,9 @@ from collections import deque
 from typing import Optional
 
 import psutil
-from flask import Flask, jsonify
-from scheduler import get_today_calendar_events
+from flask import Flask, jsonify, request
+
+from scheduler import get_today_calendar_events, get_calendar_events
 
 app = Flask(__name__)
 
@@ -107,6 +108,20 @@ def stats():
         "events": get_today_calendar_events()
     }
     return jsonify(data)
+
+
+@app.get("/events")
+def events():
+    """
+    Return calendar events for a given date.
+
+    Query params:
+      - date: optional, format YYYY-MM-DD. Defaults to today if omitted or invalid.
+    Response: JSON array of events with fields: title, location, from, to, scheduler
+    """
+    date = request.args.get("date")
+    events_data = get_calendar_events(date)
+    return jsonify(events_data)
 
 
 if __name__ == "__main__":
