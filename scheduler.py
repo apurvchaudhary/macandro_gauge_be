@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent
 # Simple per-date cache
 # [date_key] = {"data": [...], "ts": epoch_seconds}
 _cache: dict[str, dict] = {}
-CACHE_TTL = 600
+CACHE_TTL = 60
 
 SWIFT_BINARY = f"{BASE_DIR}/mac/today_events"
 
